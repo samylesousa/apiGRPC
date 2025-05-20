@@ -1,0 +1,468 @@
+syntax = "proto3";
+
+package dados;
+
+
+service EnderecoService {
+  rpc GetEndereco (EnderecoRequest) returns (Endereco) {}
+
+  rpc CreateEndereco (CreateEnderecoRequest) returns (Endereco) {}
+
+  rpc ListEnderecos (ListEnderecoRequest) returns (EnderecoListResponse) {}
+
+  rpc UpdateEndereco (Endereco) returns (Endereco) {}
+
+  rpc DeleteEndereco (EnderecoRequest) returns (Empty) {}
+}
+
+message Empty {}
+
+message EnderecoRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+}
+
+message CreateEnderecoRequest {
+  string rua = 1;
+  int32 numero = 2;
+  string bairro = 3;
+  string cidade = 4;
+  string estado = 5;
+  string cep = 6;
+}
+
+message Endereco {
+  int32 id = 1;
+  string rua = 2;
+  int32 numero = 3;
+  string bairro = 4;
+  string cidade = 5;
+  string estado = 6;
+  string cep = 7;
+  bool success = 8;
+}
+
+message ListEnderecoRequest {
+  optional string cidade = 1;
+  optional string estado = 2;
+}
+
+message EnderecoListResponse {
+  repeated Endereco enderecos = 1;
+}
+
+message UpdateEndereco {
+  int32 id = 1;
+  optional string rua = 2;
+  optional int32 numero = 3;
+  optional string bairro = 4;
+  optional string cidade = 5;
+  optional string estado = 6;
+  optional string cep = 7;
+}
+
+message DeleteEndereco {
+  int32 id = 1;
+}
+
+service PlataformaService {
+  rpc GetPlataforma (PlataformaRequest) returns (Plataforma) {}
+
+  rpc CreatePlataforma (CreatePlataformaRequest) returns (Plataforma) {}
+
+  rpc ListPlataformas (ListPlataformasRequest) returns (PlataformaListResponse) {}
+
+  rpc UpdatePlataforma (Plataforma) returns (Plataforma) {}
+
+  rpc DeletePlataforma (PlataformaRequest) returns (Empty) {}
+}
+
+message PlataformaRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+
+}
+
+message CreatePlataformaRequest {
+  string nome = 1;
+  string email = 2;
+  string website = 3;
+  bool tipo = 4;
+}
+
+message Plataforma {
+  int32 id = 1;
+  string nome = 2;
+  string email = 3;
+  string website = 4;
+  bool tipo = 5;
+  bool success = 6;
+}
+
+message ListPlataformasRequest {
+  optional string nome = 1;
+  optional bool tipo = 2;
+}
+
+message PlataformaListResponse {
+  repeated Plataforma plataformas = 1;
+}
+
+message UpdatePlataforma {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string email = 3;
+  optional string website = 4;
+  optional bool tipo = 5;
+}
+
+message DeletePlataforma {
+  int32 id = 1;
+}
+
+service ProfessorService {
+  rpc GetProfessor (ProfessorRequest) returns (Professor) {}
+
+  rpc CreateProfessor (CreateProfessorRequest) returns (Professor) {}
+
+  rpc ListProfessores (ListProfessoreRequest) returns (ProfessorListResponse) {}
+
+  rpc UpdateProfessor (Professor) returns (Professor) {}
+
+  rpc DeleteProfessor (ProfessorRequest) returns (Empty) {}
+}
+
+message ProfessorRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+
+}
+
+message CreateProfessorRequest {
+  string nome = 1;
+  string vertente = 2;
+  string telefone = 3;
+  string email = 4;
+  string website = 5;
+  string formacao = 6;
+}
+
+message Professor {
+  int32 id = 1;
+  string nome = 2;
+  string vertente = 3;
+  string telefone = 4;
+  string email = 5;
+  string website = 6;
+  string formacao = 7;
+  bool success = 8;
+}
+
+message ListProfessoreRequest {
+  optional string vertente = 1;
+  optional string formacao = 2; 
+}
+
+message ProfessorListResponse {
+  repeated Professor professores = 1;
+}
+
+message UpdateProfessor {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string vertente = 3;
+  optional string telefone = 4;
+  optional string email = 5;
+  optional string website = 6;
+  optional string formacao = 7;
+}
+
+message DeleteProfessor {
+  int32 id = 1;
+}
+
+service BolsaService {
+  rpc GetBolsa (BolsaRequest) returns (Bolsa) {}
+
+  rpc CreateBolsa (CreateBolsaRequest) returns (Bolsa) {}
+
+  rpc ListBolsas (ListBolsasRequest) returns (BolsaListResponse) {}
+
+  rpc UpdateBolsa (Bolsa) returns (Bolsa) {}
+
+  rpc DeleteBolsa (BolsaRequest) returns (Empty) {}
+}
+
+message BolsaRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+}
+
+message Data {
+  int32 ano = 1;
+  int32 mes = 2;  
+  int32 dia = 3;
+}
+
+message CreateBolsaRequest {
+  string nome = 1;
+  string vertente = 2;
+  float salario = 3;
+  bool remunerado = 4;
+  int32 horas_semanais = 5;
+  int32 quantidade_vagas = 6;
+  string descricao = 7;
+  int32 professor_id = 8;
+  Data data_inicio = 9;
+  Data data_fim = 10;
+}
+
+message Bolsa {
+  int32 id = 1;
+  string nome = 2;
+  string vertente = 3;
+  float salario = 4;
+  bool remunerado = 5;
+  int32 horas_semanais = 6;
+  int32 quantidade_vagas = 7;
+  string descricao = 8;
+  optional Data data_inicio = 9;
+  optional Data data_fim = 10;
+  int32 professor_id = 11;
+  bool success = 12;
+}
+
+message ListBolsasRequest {
+  optional string vertente = 1;
+  optional bool remunerado = 2;
+  optional int32 horas_semanais = 3;
+}
+
+message BolsaListResponse {
+  repeated Bolsa bolsas = 1;
+}
+
+message UpdateBolsa {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string vertente = 3;
+  optional float salario = 4;
+  optional bool remunerado = 5;
+  optional int32 horas_semanais = 6;
+  optional int32 quantidade_vagas = 7;
+  optional string descricao = 8;
+  optional int32 professor_id = 9;
+  optional Data data_inicio = 10;
+  optional Data data_fim = 11;
+}
+
+message DeleteBolsa {
+  int32 id = 1;
+}
+
+service CursoService {
+  rpc GetCurso (CursoRequest) returns (Curso) {}
+
+  rpc CreateCurso (CreateCursoRequest) returns (Curso) {}
+
+  rpc ListCursos (ListCursosRequest) returns (CursoListResponse) {}
+
+  rpc UpdateCurso (Curso) returns (Curso) {}
+
+  rpc DeleteCurso (CursoRequest) returns (Empty) {}
+}
+
+message CursoRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+}
+
+message CreateCursoRequest {
+  string nome = 1;
+  string categoria = 2;
+  float preco = 3;
+  int32 plataforma_id = 4;
+  string nivel = 5;
+  string vertente = 6;
+  Data data_inicio = 7;
+  Data data_fim = 8;
+}
+
+message Curso {
+  int32 id = 1;
+  string nome = 2;
+  string categoria = 3;
+  float preco = 4;
+  int32 plataforma_id = 5;
+  string nivel = 6;
+  string vertente = 7;
+  Data data_inicio = 8;
+  Data data_fim = 9;
+}
+
+message ListCursosRequest {
+  optional string categoria = 1;
+  optional string nivel = 2;
+  optional string vertente = 3;
+}
+
+message CursoListResponse {
+  repeated Curso cursos = 1;
+}
+
+message UpdateCurso {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string categoria = 3;
+  optional float preco = 4;
+  optional int32 plataforma_id = 5;
+  optional string nivel = 6;
+  optional string vertente = 7;
+  optional Data data_inicio = 8;
+  optional Data data_fim = 9;
+}
+
+message DeleteCurso {
+  int32 id = 1;
+}
+
+service EmpresaService {
+  rpc GetEmpresa (EmpresaRequest) returns (Empresa) {}
+
+  rpc CreateEmpresa (CreateEmpresaRequest) returns (Empresa) {}
+
+  rpc ListEmpresas (ListEmpresasRequest) returns (EmpresaListResponse) {}
+
+  rpc UpdateEmpresa (Empresa) returns (Empresa) {}
+
+  rpc DeleteEmpresa (EmpresaRequest) returns (Empty) {}
+}
+
+message EmpresaRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+}
+
+message CreateEmpresaRequest {
+  string nome = 1;
+  string vertente = 2;
+  string CNPJ = 3;
+  int32 endereco_id = 4;
+  string telefone = 5;
+  string email = 6;
+  string website = 7;
+  bool status = 8;
+}
+
+message Empresa {
+  int32 id = 1;
+  string nome = 2;
+  string vertente = 3;
+  string CNPJ = 4;
+  int32 endereco_id = 5;
+  string telefone = 6;
+  string email = 7;
+  string website = 8;
+  bool status = 9;
+}
+
+message ListEmpresasRequest {
+  optional string vertente = 1;
+  optional bool status = 2;
+}
+
+message EmpresaListResponse {
+  repeated Empresa empresas = 1;
+}
+
+message UpdateEmpresa {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string vertente = 3;
+  optional string CNPJ = 4;
+  optional int32 endereco_id = 5;
+  optional string telefone = 6;
+  optional string email = 7;
+  optional string website = 8;
+  optional bool status = 9;
+}
+
+message DeleteEmpresa {
+  int32 id = 1;
+}
+
+service EstagioService {
+  rpc GetEstagio (EstagioRequest) returns (Estagio) {}
+
+  rpc CreateEstagio (CreateEstagioRequest) returns (Estagio) {}
+
+  rpc ListEstagios (ListEstagioRequest) returns (EstagioListResponse) {}
+
+  rpc UpdateEstagio (Estagio) returns (Estagio) {}
+
+  rpc DeleteEstagio (EstagioRequest) returns (Empty) {}
+}
+
+message EstagioRequest {
+  oneof identifier {
+    int32 id = 1;
+  }
+}
+
+message CreateEstagioRequest {
+  string nome = 1;
+  string vertente = 2;
+  float salario = 3;
+  int32 empresa_id = 4;
+  bool remunerado = 5;
+  int32 horas_semanais = 6;
+  string descricao = 7;
+  Data data_inicio = 8;
+  Data data_fim = 9;
+}
+
+message Estagio {
+  int32 id = 1;
+  string nome = 2;
+  string vertente = 3;
+  float salario = 4;
+  int32 empresa_id = 5;
+  bool remunerado = 6;
+  int32 horas_semanais = 7;
+  string descricao = 8;
+  Data data_inicio = 9;
+  Data data_fim = 10;
+}
+
+message ListEstagioRequest {
+  optional string vertente = 1;
+  optional bool remunerado = 2;
+  optional int32 empresa_id = 3;
+}
+
+message EstagioListResponse {
+  repeated Estagio estagios = 1;
+}
+
+message UpdateEstagio {
+  int32 id = 1;
+  optional string nome = 2;
+  optional string vertente = 3;
+  optional float salario = 4;
+  optional int32 empresa_id = 5;
+  optional bool remunerado = 6;
+  optional int32 horas_semanais = 7;
+  optional string descricao = 8;
+  optional Data data_inicio = 9;
+  optional Data data_fim = 10;
+}
+
+message DeleteEstagio {
+  int32 id = 1;
+}
