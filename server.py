@@ -3,281 +3,46 @@ import grpc
 from concurrent import futures
 import dados_pb2
 import dados_pb2_grpc
+from database.models import EmpresaModel, CursoModel, EstagioModel, BolsaModel, ProfessorModel, PlataformaModel, EnderecoModel
+from database.database_config import get_session
 import asyncio
 
 #imports para o banco de dados
-import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
+# import sqlalchemy as sa
+# from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+# from sqlalchemy.orm import sessionmaker
+# from sqlalchemy import Column, Integer, String, Text
+# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import select, update, delete
-import asyncmy
+# import asyncmy
+
+
 #configurando o banco de dados assíncrono
-DATABASE_URL = "mysql+asyncmy://root:issoechatopracaralho@localhost:3306/dadosGerais"
+#DATABASE_URL = "mysql+asyncmy://root:issoechatopracaralho@localhost:3306/dadosGerais"
 
 #criando uma engine assíncrona
-async_engine = create_async_engine(DATABASE_URL, echo=True)
+#async_engine = create_async_engine(DATABASE_URL, echo=True)
 
 #criando uma fabrica de sessoes assincronas
-AsyncSessionLocal = sessionmaker(
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+# AsyncSessionLocal = sessionmaker(
+#     bind=async_engine,
+#     class_=AsyncSession,
+#     expire_on_commit=False,
+# )
 
-#modelo base para sqlalchemy
-Base = sa.orm.declarative_base()
-
-#os modelos abaixo foram os mesmos que eu escrevi para o graphql
-#metadados das tabelas para conseguir fazer as requisições
-#samyle código
-metadata = sa.MetaData()
-class EmpresaModel(Base):
-
-    def __init__(self, nome, vertente, cnpj, endereco_id, telefone, email, website, status, **kwargs):
-        self.nome = nome
-        self.vertente = vertente
-        self.cnpj = cnpj
-        self.endereco_id = endereco_id
-        self.telefone = telefone
-        self.email = email
-        self.website = website
-        self.status = status
-    
-    def __str__(self):
-        return f"""Nome: {self.nome},
-            Vertente: {self.vertente},
-            CNPJ: {self.cnpj},
-            Endereço: {self.endereco_id},
-            Telefone: {self.telefone},
-            Email: {self.email},
-            Website: {self.website},
-            Status: {"Ativa" if self.status else "Desativada"}
-        """
-    __tablename__ = 'empresa'
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String) 
-    vertente = sa.Column(sa.String) 
-    cnpj = sa.Column(sa.String)
-    endereco_id = sa.Column(sa.Integer, sa.ForeignKey('endereco.id'))
-    telefone = sa.Column(sa.String)
-    email = sa.Column(sa.String)
-    website = sa.Column(sa.String)
-    status = sa.Column(sa.Boolean)
-
-    # endereco = sa.orm.relationship("Endereco")
-
-class CursoModel(Base):
-    def __init__(self, nome, categoria, preco, plataforma_id, nivel, vertente, data_inicio, data_fim, **kwargs):
-        self.nome = nome
-        self.vertente = vertente
-        self.categoria = categoria
-        self.preco = preco
-        self.plataforma_id = plataforma_id
-        self.nivel = nivel
-        self.data_inicio = data_inicio
-        self.data_fim = data_fim
-
-    def __str__(self):
-        return f"""Nome: {self.nome},
-            Vertente: {self.vertente},
-            Categoria: {self.categoria},
-            Preço: {self.preco},
-            Plataforma Id: {self.plataforma_id},
-            Nível: {self.nivel},
-            Data de Início: {self.data_inicio},
-            Data de Fim: {self.data_fim}
-        """
-
-
-    __tablename__ = 'curso'
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String)
-    categoria = sa.Column(sa.String)   #se é pago ou não
-    preco = sa.Column(sa.Float)
-    plataforma_id =  sa.Column(sa.Integer, sa.ForeignKey('plataforma.id'))
-    nivel = sa.Column(sa.String)    #as três opções são, iniciante, intermédiario e avançado
-    vertente = sa.Column(sa.String)
-    data_inicio = sa.Column(sa.DATE)
-    data_fim = sa.Column(sa.DATE) 
-
-    # plataforma = sa.orm.relationship("Plataforma")
-
-class EstagioModel(Base):
-    def __init__(self, nome, vertente, salario, empresa_id, remunerado, horas_semanais, descricao, data_inicio, data_fim, **kwargs):
-        self.nome = nome
-        self.vertente = vertente
-        self.salario = salario
-        self.empresa_id = empresa_id
-        self.remunerado = remunerado
-        self.horas_semanais = horas_semanais
-        self.descricao = descricao
-        self.data_inicio = data_inicio
-        self.data_fim = data_fim
-
-    def __str__(self):
-        return f'''Nome: {self.nome}, 
-            Vertente: {self.vertente},
-            Salário: {self.salario},
-            Empresa Id: {self.empresa_id},
-            Remunerado: {"Sim" if self.remunerado else "Não"},
-            Horas Semanais: {self.horas_semanais},
-            Descrição: {self.descricao},
-            Data de Início: {self.data_inicio},
-            Data de Fim: {self.data_fim}
-        '''
-
-
-    __tablename__ = 'estagio'
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String)
-    vertente = sa.Column(sa.String)
-    salario = sa.Column(sa.Float)
-    empresa_id = sa.Column(sa.Integer, sa.ForeignKey('empresa.id'))
-    remunerado  = sa.Column(sa.Boolean)
-    horas_semanais = sa.Column(sa.Integer)
-    descricao = sa.Column(sa.String)
-    data_inicio = sa.Column(sa.DATE)
-    data_fim = sa.Column(sa.DATE)
-
-    # empresa = sa.orm.relationship("Empresa")
-
-class BolsaModel(Base):
-    def __init__(self, nome, vertente, salario, remunerado, horas_semanais, quantidade_vagas, descricao, data_inicio, data_fim, professor_id, **kwargs):
-        self.nome = nome
-        self.vertente = vertente
-        self.salario = salario
-        self.remunerado = remunerado
-        self.horas_semanais = horas_semanais
-        self.quantidade_vagas = quantidade_vagas
-        self.descricao = descricao
-        self.data_inicio = data_inicio
-        self.data_fim = data_fim
-        self.professor_id = professor_id
-    
-    def __str__(self):
-        return f"""Nome: {self.nome},
-            Vertente: {self.vertente},
-            Salário: {self.salario},
-            Remunerado: {self.remunerado},
-            Horas Semanais: {self.horas_semanais},
-            Quantidade de Vagas: {self.quantidade_vagas},
-            Descrição: {self.descricao},
-            Data de Início: {self.data_inicio},
-            Data de Fim: {self.data_fim},
-            Professor Id: {self.professor_id}
-        """
-
-
-    __tablename__ = 'bolsa'
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String)
-    vertente = sa.Column(sa.String)
-    salario = sa.Column(sa.Float)
-    remunerado  = sa.Column(sa.Boolean)
-    horas_semanais = sa.Column(sa.Integer)
-    quantidade_vagas = sa.Column(sa.Integer)
-    descricao = sa.Column(sa.String)
-    data_inicio = sa.Column(sa.DATE)
-    data_fim = sa.Column(sa.DATE) 
-    professor_id = sa.Column(sa.Integer, sa.ForeignKey('professor.id'))
-
-    # professor = sa.orm.relationship("Professor")
-
-class ProfessorModel(Base):
-    __tablename__ = 'professor'
-
-    def __init__(self, nome, vertente, telefone, email, website, formacao, **kwargs):
-        self.nome = nome
-        self.vertente = vertente
-        self.telefone = telefone
-        self.email = email
-        self.website = website
-        self.formacao = formacao
-    
-    def __str__(self):
-        return f"""Nome: {self.nome}, 
-            Vertente: {self.vertente},
-            Telefone: {self.telefone},
-            Email: {self.email},
-            Website: {self.website},
-            Formção: {self.formacao}
-        """
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String)
-    vertente = sa.Column(sa.String)
-    telefone = sa.Column(sa.String)
-    email = sa.Column(sa.String)
-    website = sa.Column(sa.String)
-    formacao = sa.Column(sa.String)
-
-class PlataformaModel(Base):
-    def __init__(self, nome, email, website, tipo, **kwargs):
-        self.nome = nome
-        self.email = email
-        self.website = website
-        self.tipo = tipo
-    
-    def __str__(self):
-        return f"""Nome: {self.nome},
-            Email: {self.email},
-            Website: {self.website},
-            Tipo: {"Gratuita" if self.tipo else "Paga"}
-        """
-
-    __tablename__ = 'plataforma'
-    id = sa.Column(sa.Integer, primary_key=True)
-    nome = sa.Column(sa.String)
-    email = sa.Column(sa.String)
-    website = sa.Column(sa.String)
-    tipo  = sa.Column(sa.Boolean) #se é paga ou gratuita
-
-class EnderecoModel(Base):
-    def __init__(self, rua=None, numero=None, bairro=None, cidade=None, estado=None, cep=None, **kwargs):
-        self.rua = rua
-        self.numero = numero
-        self.bairro = bairro
-        self.cidade = cidade
-        self.estado = estado
-        self.cep = cep
-    
-    def __str__(self):
-        return f"""Rua: {self.rua},
-            Número: {self.numero},
-            Bairro: {self.bairro},
-            Cidade: {self.cidade},
-            Estado: {self.estado},
-            Cep: {self.cep}
-        """
-
-    __tablename__ = 'endereco'
-    id = sa.Column(sa.Integer, primary_key=True)
-    rua = sa.Column(sa.String)
-    numero = sa.Column(sa.Integer)
-    bairro = sa.Column(sa.String) 
-    cidade = sa.Column(sa.String)
-    estado = sa.Column(sa.String)
-    cep = sa.Column(sa.String)
-    
 
 #classes para os elementos do .proto
 class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
 
     async def GetEndereco(self, request, context):
-        async with AsyncSessionLocal() as session:
-            #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(EnderecoModel).where(EnderecoModel.id == request.id)
-            )
-            item = result.scalars().first()
+        async with get_session() as session:
+            item = await session.get(EnderecoModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Endereco()
-            
+
             return dados_pb2.Endereco(
                 id=item.id,
                 rua=item.rua,
@@ -289,7 +54,7 @@ class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
             )
 
     async def CreateEndereco(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = EnderecoModel(
                     rua=request.rua,
@@ -320,17 +85,10 @@ class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
                 return dados_pb2.Endereco(success=False)
 
     async def ListEnderecos(self, request: dados_pb2.ListEnderecoRequest, context):
-        async with AsyncSessionLocal() as session:
-            query = select(EnderecoModel)
-            if request.HasField('cidade'):
-                query = select(EnderecoModel).where(EnderecoModel.cidade == request.cidade)
-                # query = query.filter(cidade=request.cidade)
-            if request.HasField('estado'):
-                # query = query.filter(estado=request.estado)
-                query = select(EnderecoModel).where(EnderecoModel.estado == request.estado)
+        async with get_session() as session:
 
-            resultados = await session.execute(query)
-            enderecos = resultados.scalars().all()
+            resultado = await session.execute(select(EnderecoModel))
+            enderecos = resultado.scalars().all()
 
             lista_enderecos = dados_pb2.EnderecoListResponse()
             for endereco in enderecos:
@@ -345,49 +103,33 @@ class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
                     )
                 )
             return lista_enderecos
-    
+
     async def UpdateEndereco(self, request: dados_pb2.Endereco, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
-                #verificando se o endereco existe
-                resultado = await session.execute(
-                    select(EnderecoModel).where(EnderecoModel.id == request.id)
-                )
-                endereco_existente = resultado.scalars().first()
+                endereco_existente = await session.get(EnderecoModel, request.id)
 
                 if endereco_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Endereço Indisponível")
                     return dados_pb2.Endereco()
-                
-                #atualizando o endereco
-                await session.execute(
-                    update(EnderecoModel)
-                    .where(EnderecoModel.id == request.id)
-                    .values(
-                        rua=request.rua,
-                        numero=request.numero,
-                        bairro=request.bairro,
-                        cidade=request.cidade,
-                        estado=request.estado,
-                        cep=request.cep
-                    )
-                )
-                await session.commit()
 
-                resultado = await session.execute(
-                    select(EnderecoModel).where(EnderecoModel.id == request.id)
-                )
-                enderecos_atualizados = resultado.scalars().first()
+                #atualizando o endereco
+                for key, value in request:
+                    if key != "id" and value is not None:
+                        setattr(endereco_existente, key, value)
+
+                await session.commit()
+                await session.refresh(endereco_existente)
 
                 return dados_pb2.Endereco(
-                    id=enderecos_atualizados.id,
-                    rua=enderecos_atualizados.rua,
-                    numero=enderecos_atualizados.numero,
-                    bairro=enderecos_atualizados.bairro,
-                    cidade=enderecos_atualizados.cidade,
-                    estado=enderecos_atualizados.estado,
-                    cep=enderecos_atualizados.cep
+                    id=endereco_existente.id,
+                    rua=endereco_existente.rua,
+                    numero=endereco_existente.numero,
+                    bairro=endereco_existente.bairro,
+                    cidade=endereco_existente.cidade,
+                    estado=endereco_existente.estado,
+                    cep=endereco_existente.cep
                 )
             except Exception as e:
                 await session.rollback()
@@ -396,23 +138,16 @@ class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
                 return dados_pb2.Endereco()
 
     async def DeleteEndereco(self, request: dados_pb2.EnderecoRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
-                #verificando se o endereco existe
-                resultado = await session.execute(
-                    select(EnderecoModel).where(EnderecoModel.id == request.id)
-                )
-                endereco_existente = resultado.scalars().first()
+                endereco_existente = await session.get(EnderecoModel, request.id)
 
                 if endereco_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Endereço Indisponível")
                     return dados_pb2.Empty()
 
-                #removendo o endereco
-                await session.execute(
-                    delete(EnderecoModel).where(EnderecoModel.id == request.id)
-                )
+                await session.delete(endereco_existente)
                 await session.commit()
 
                 return dados_pb2.Empty()
@@ -425,18 +160,14 @@ class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
 class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
 
     async def GetPlataforma(self, request, context):
-        async with AsyncSessionLocal() as session:
-            #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(PlataformaModel).where(PlataformaModel.id == request.id)
-            )
-            item = result.scalars().first()
+        async with get_session() as session:
+            item = await session.get(PlataformaModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Plataforma()
-            
+
             return dados_pb2.Plataforma(
                 id=item.id,
                 nome=item.nome,
@@ -446,7 +177,7 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
             )
 
     async def CreatePlataforma(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = PlataformaModel(
                     nome=request.nome,
@@ -473,15 +204,9 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
                 return dados_pb2.Plataforma(success=False)
 
     async def ListPlataformas(self, request: dados_pb2.ListPlataformasRequest, context):
-        async with AsyncSessionLocal() as session:
-            query = select(PlataformaModel)
-            if request.HasField('nome'):
-                query = select(PlataformaModel).where(PlataformaModel.nome == request.nome)
-            if request.HasField('tipo'):
-                query = select(PlataformaModel).where(PlataformaModel.tipo == request.tipo)
-
-            resultados = await session.execute(query)
-            plataformas = resultados.scalars().all()
+        async with get_session() as session:
+            resultado = await session.execute(select(PlataformaModel))
+            plataformas = resultado.scalars().all()
 
             lista_plataformas = dados_pb2.PlataformaListResponse()
             for plataforma in plataformas:
@@ -495,45 +220,32 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
                     )
                 )
             return lista_plataformas
-    
+
     async def UpdatePlataforma(self, request: dados_pb2.Plataforma, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
-                #verificando se a plataforma existe
-                resultado = await session.execute(
-                    select(PlataformaModel).where(PlataformaModel.id == request.id)
-                )
-                plataforma_existente = resultado.scalars().first()
+                plataforma_existente = await session.get(PlataformaModel, request.id)
 
                 if plataforma_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Plataforma Indisponível")
                     return dados_pb2.Plataforma()
-                
-                #atualizando a plataforma
-                await session.execute(
-                    update(PlataformaModel)
-                    .where(PlataformaModel.id == request.id)
-                    .values(
-                        nome=request.nome,
-                        email=request.email,
-                        website=request.website,
-                        tipo=request.tipo
-                    )
-                )
-                await session.commit()
 
-                resultado = await session.execute(
-                    select(PlataformaModel).where(PlataformaModel.id == request.id)
-                )
-                plataforma_atualizadas = resultado.scalars().first()
+                #atualizando o endereco
+                for key, value in request:
+                    if key != "id" and value is not None:
+                        setattr(plataforma_existente, key, value)
+
+                await session.commit()
+                await session.refresh(plataforma_existente)
+
 
                 return dados_pb2.Plataforma(
-                    id=plataforma_atualizadas.id,
-                    nome=plataforma_atualizadas.nome,
-                    email=plataforma_atualizadas.email,
-                    website=plataforma_atualizadas.website,
-                    tipo=plataforma_atualizadas.tipo
+                    id=plataforma_existente.id,
+                    nome=plataforma_existente.nome,
+                    email=plataforma_existente.email,
+                    website=plataforma_existente.website,
+                    tipo=plataforma_existente.tipo
 
                 )
             except Exception as e:
@@ -543,13 +255,9 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
                 return dados_pb2.Plataforma()
 
     async def DeletePlataforma(self, request: dados_pb2.PlataformaRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
-                #verificando se a plataforma existe
-                resultado = await session.execute(
-                    select(PlataformaModel).where(PlataformaModel.id == request.id)
-                )
-                plataforma_existente = resultado.scalars().first()
+                plataforma_existente = await session.get(PlataformaModel, request.id)
 
                 if plataforma_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -557,9 +265,7 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
                     return dados_pb2.Empty()
 
                 #removendo a plataforma
-                await session.execute(
-                    delete(PlataformaModel).where(PlataformaModel.id == request.id)
-                )
+                await session.delete(plataforma_existente)
                 await session.commit()
 
                 return dados_pb2.Empty()
@@ -572,18 +278,14 @@ class PlataformaService(dados_pb2_grpc.PlataformaServiceServicer):
 class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
 
     async def GetProfessor(self, request, context):
-        async with AsyncSessionLocal() as session:
-            #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(ProfessorModel).where(ProfessorModel.id == request.id)
-            )
-            item = result.scalars().first()
+        async with get_session() as session:
+            item = await session.get(ProfessorModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Professor()
-            
+
             return dados_pb2.Professor(
                 id=item.id,
                 nome=item.nome,
@@ -595,7 +297,7 @@ class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
             )
 
     async def CreateProfessor(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = ProfessorModel(
                     nome=request.nome,
@@ -626,15 +328,9 @@ class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
                 return dados_pb2.Professor(success=False)
 
     async def ListProfessores(self, request: dados_pb2.ListProfessoreRequest, context):
-        async with AsyncSessionLocal() as session:
-            query = select(ProfessorModel)
-            if request.HasField('vertente'):
-                query = select(ProfessorModel).where(ProfessorModel.vertente == request.vertente)
-            if request.HasField('formacao'):
-                query = select(ProfessorModel).where(ProfessorModel.formacao == request.formacao)
-
-            resultados = await session.execute(query)
-            professores = resultados.scalars().all()
+        async with get_session() as session:
+            resultado = await session.execute(select(ProfessorModel))
+            professores = resultado.scalars().all()
 
             lista_professores = dados_pb2.ProfessorListResponse()
             for professor in professores:
@@ -650,49 +346,34 @@ class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
                     )
                 )
             return lista_professores
-    
+
     async def UpdateProfessor(self, request: dados_pb2.Professor, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se o professor existe
-                resultado = await session.execute(
-                    select(ProfessorModel).where(ProfessorModel.id == request.id)
-                )
-                professor_existente = resultado.scalars().first()
+                professor_existente = await session.get(ProfessorModel, request.id)
 
                 if professor_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Professor Indisponível")
                     return dados_pb2.Professor()
-                
-                #atualizando o professor
-                await session.execute(
-                    update(ProfessorModel)
-                    .where(ProfessorModel.id == request.id)
-                    .values(
-                        nome=request.nome,
-                        vertente=request.vertente,
-                        telefone=request.telefone,
-                        email=request.email,
-                        website=request.website,
-                        formacao=request.formacao
-                    )
-                )
-                await session.commit()
 
-                resultado = await session.execute(
-                    select(ProfessorModel).where(ProfessorModel.id == request.id)
-                )
-                professor_atualizado = resultado.scalars().first()
+                #atualizando o professor
+                for key, value in request:
+                    if key != "id" and value is not None:
+                        setattr(professor_existente, key, value)
+
+                await session.commit()
+                await session.refresh(professor_existente)
 
                 return dados_pb2.Professor(
-                    id=professor_atualizado.id,
-                    nome=professor_atualizado.nome,
-                    vertente=professor_atualizado.vertente,
-                    telefone=professor_atualizado.telefone,
-                    email=professor_atualizado.email,
-                    website=professor_atualizado.website,
-                    formacao=professor_atualizado.formacao
+                    id=professor_existente.id,
+                    nome=professor_existente.nome,
+                    vertente=professor_existente.vertente,
+                    telefone=professor_existente.telefone,
+                    email=professor_existente.email,
+                    website=professor_existente.website,
+                    formacao=professor_existente.formacao
 
                 )
             except Exception as e:
@@ -702,23 +383,18 @@ class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
                 return dados_pb2.Professor()
 
     async def DeleteProfessor(self, request: dados_pb2.ProfessorRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se o professor existe
-                resultado = await session.execute(
-                    select(ProfessorModel).where(ProfessorModel.id == request.id)
-                )
-                professor_existente = resultado.scalars().first()
+                professor_existente = await session.get(ProfessorModel, request.id)
 
                 if professor_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Professor Indisponível")
                     return dados_pb2.Empty()
 
-                #removendo a plataforma
-                await session.execute(
-                    delete(ProfessorModel).where(ProfessorModel.id == request.id)
-                )
+                #removendo o professor
+                await session.delete(professor_existente)
                 await session.commit()
 
                 return dados_pb2.Empty()
@@ -731,18 +407,20 @@ class ProfessorService(dados_pb2_grpc.ProfessorServiceServicer):
 class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
 
     async def GetBolsa(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(BolsaModel).where(BolsaModel.id == request.id)
-            )
-            item = result.scalars().first()
+            # result = await session.execute(
+            #     select(BolsaModel).where(BolsaModel.id == request.id)
+            # )
+            # item = result.scalars().first()
+
+            item = await session.get(BolsaModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Bolsa()
-            
+
             return dados_pb2.Bolsa(
                 id=item.id,
                 nome=item.nome,
@@ -758,7 +436,7 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
             )
 
     async def CreateBolsa(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = BolsaModel(
                     nome=request.nome,
@@ -785,8 +463,8 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                     horas_semanais=novo_item.horas_semanais,
                     quantidade_vagas=novo_item.quantidade_vagas,
                     descricao=novo_item.descricao,
-                    data_inicio=novo_item.data_inicio,
-                    data_fim=novo_item.data_fim,
+                    data_inicio=novo_item.data_inicio if "data_inicio" in novo_item else None,
+                    data_fim=novo_item.data_fim if "data_fim" in novo_item else None,
                     professor_id=novo_item.professor_id,
                     success=True
                 )
@@ -797,17 +475,20 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                 return dados_pb2.Bolsa(success=False)
 
     async def ListBolsas(self, request: dados_pb2.ListBolsasRequest, context):
-        async with AsyncSessionLocal() as session:
-            query = select(BolsaModel)
-            if request.HasField('vertente'):
-                query = select(BolsaModel).where(BolsaModel.vertente == request.vertente)
-            if request.HasField('remunerado'):
-                query = select(BolsaModel).where(BolsaModel.remunerado == request.remunerado)
-            if request.HasField('horas_semanais'):
-                query = select(BolsaModel).where(BolsaModel.horas_semanais == request.horas_semanais)
+        async with get_session() as session:
+            # query = select(BolsaModel)
+            # if request.HasField('vertente'):
+            #     query = select(BolsaModel).where(BolsaModel.vertente == request.vertente)
+            # if request.HasField('remunerado'):
+            #     query = select(BolsaModel).where(BolsaModel.remunerado == request.remunerado)
+            # if request.HasField('horas_semanais'):
+            #     query = select(BolsaModel).where(BolsaModel.horas_semanais == request.horas_semanais)
 
-            resultados = await session.execute(query)
-            bolsas = resultados.scalars().all()
+            # resultados = await session.execute(query)
+            # bolsas = resultados.scalars().all()
+
+            resultado = await session.execute(select(BolsaModel))
+            bolsas = resultado.scalars().all()
 
             lista_bolsas = dados_pb2.BolsaListResponse()
             for bolsa in bolsas:
@@ -827,57 +508,68 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                     )
                 )
             return lista_bolsas
-    
+
     async def UpdateBolsa(self, request: dados_pb2.Bolsa, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se a bolsa existe
-                resultado = await session.execute(
-                    select(BolsaModel).where(BolsaModel.id == request.id)
-                )
-                bolsa_existente = resultado.scalars().first()
+                # resultado = await session.execute(
+                #     select(BolsaModel).where(BolsaModel.id == request.id)
+                # )
+                # bolsa_existente = resultado.scalars().first()
+                bolsa_existente = await session.get(BolsaModel, request.id)
 
                 if bolsa_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Bolsa Indisponível")
                     return dados_pb2.Bolsa()
-                
-                #atualizando a bolsa
-                await session.execute(
-                    update(BolsaModel)
-                    .where(BolsaModel.id == request.id)
-                    .values(
-                        nome=request.nome,
-                        vertente=request.vertente,
-                        salario=request.salario,
-                        remunerado=request.remunerado,
-                        horas_semanais=request.horas_semanais,
-                        quantidade_vagas=request.quantidade_vagas,
-                        descricao=request.descricao,
-                        data_inicio=request.data_inicio,
-                        data_fim=request.data_fim,
-                        professor_id=request.professor_id,
-                    )
-                )
-                await session.commit()
 
-                resultado = await session.execute(
-                    select(BolsaModel).where(BolsaModel.id == request.id)
-                )
-                bolsa_atualizada = resultado.scalars().first()
+                #atualizando a bolsa
+                # await session.execute(
+                #     update(BolsaModel)
+                #     .where(BolsaModel.id == request.id)
+                #     .values(
+                #         nome=request.nome,
+                #         vertente=request.vertente,
+                #         salario=request.salario,
+                #         remunerado=request.remunerado,
+                #         horas_semanais=request.horas_semanais,
+                #         quantidade_vagas=request.quantidade_vagas,
+                #         descricao=request.descricao,
+                #         data_inicio=request.data_inicio,
+                #         data_fim=request.data_fim,
+                #         professor_id=request.professor_id,
+                #     )
+                # )
+                # await session.commit()
+
+                # resultado = await session.execute(
+                #     select(BolsaModel).where(BolsaModel.id == request.id)
+                # )
+                # bolsa_atualizada = resultado.scalars().first()
+                #verificando se o professor existe
+
+
+                #atualizando a bolsa
+                for key, value in request:
+                    if key != "id" and value is not None:
+                        setattr(bolsa_existente, key, value)
+
+                await session.commit()
+                await session.refresh(bolsa_existente)
 
                 return dados_pb2.Bolsa(
-                    id=bolsa_atualizada.id,
-                    nome=bolsa_atualizada.nome,
-                    vertente=bolsa_atualizada.vertente,
-                    salario=bolsa_atualizada.salario,
-                    remunerado=bolsa_atualizada.remunerado,
-                    horas_semanais=bolsa_atualizada.horas_semanais,
-                    quantidade_vagas=bolsa_atualizada.quantidade_vagas,
-                    descricao=bolsa_atualizada.descricao,
-                    data_inicio=bolsa_atualizada.data_inicio,
-                    data_fim=bolsa_atualizada.data_fim,
-                    professor_id=bolsa_atualizada.professor_id,
+                    id=bolsa_existente.id,
+                    nome=bolsa_existente.nome,
+                    vertente=bolsa_existente.vertente,
+                    salario=bolsa_existente.salario,
+                    remunerado=bolsa_existente.remunerado,
+                    horas_semanais=bolsa_existente.horas_semanais,
+                    quantidade_vagas=bolsa_existente.quantidade_vagas,
+                    descricao=bolsa_existente.descricao,
+                    data_inicio=bolsa_existente.data_inicio,
+                    data_fim=bolsa_existente.data_fim,
+                    professor_id=bolsa_existente.professor_id,
 
                 )
             except Exception as e:
@@ -885,15 +577,16 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
                 return dados_pb2.Bolsa()
-            
+
     async def DeleteBolsa(self, request: dados_pb2.BolsaRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se o professor existe
-                resultado = await session.execute(
-                    select(BolsaModel).where(BolsaModel.id == request.id)
-                )
-                bolsa_existente = resultado.scalars().first()
+                # resultado = await session.execute(
+                #     select(BolsaModel).where(BolsaModel.id == request.id)
+                # )
+                # bolsa_existente = resultado.scalars().first()
+                bolsa_existente = await session.get(BolsaModel, request.id)
 
                 if bolsa_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -901,9 +594,19 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                     return dados_pb2.Empty()
 
                 #removendo a bolsa
-                await session.execute(
-                    delete(BolsaModel).where(BolsaModel.id == request.id)
-                )
+                # await session.execute(
+                #     delete(BolsaModel).where(BolsaModel.id == request.id)
+                # )
+                # await session.commit()
+
+
+                # if professor_existente is None:
+                #     context.set_code(grpc.StatusCode.NOT_FOUND)
+                #     context.set_details("Professor Indisponível")
+                #     return dados_pb2.Empty()
+
+                #removendo o professor
+                await session.delete(bolsa_existente)
                 await session.commit()
 
                 return dados_pb2.Empty()
@@ -916,18 +619,20 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
 class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
 
     async def GetEstagio(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(EstagioModel).where(EstagioModel.id == request.id)
-            )
-            item = result.scalars().first()
+            # result = await session.execute(
+            #     select(EstagioModel).where(EstagioModel.id == request.id)
+            # )
+            # item = result.scalars().first()
+
+            item = await session.get(EstagioModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Estagio()
-            
+
             return dados_pb2.Estagio(
                 id=item.id,
                 nome=item.nome,
@@ -942,7 +647,7 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
             )
 
     async def CreateEstagio(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = EstagioModel(
                     nome=request.nome,
@@ -979,7 +684,7 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
                 return dados_pb2.Estagio(success=False)
 
     async def ListEstagio(self, request: dados_pb2.ListEstagioRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             query = select(EstagioModel)
             if request.HasField('vertente'):
                 query = select(EstagioModel).where(EstagioModel.vertente == request.vertente)
@@ -1008,9 +713,9 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
                     )
                 )
             return lista_estagios
-    
+
     async def UpdateEstagio(self, request: dados_pb2.Estagio, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se a bolsa existe
                 resultado = await session.execute(
@@ -1022,7 +727,7 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Estágio Indisponível")
                     return dados_pb2.Estagio()
-                
+
                 #atualizando a bolsa
                 await session.execute(
                     update(EstagioModel)
@@ -1064,9 +769,9 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
                 return dados_pb2.Estagio()
-            
+
     async def DeleteEstagio(self, request: dados_pb2.EstagioRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se o estágio existe
                 resultado = await session.execute(
@@ -1095,18 +800,20 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
 class CursoService(dados_pb2_grpc.CursoServiceServicer):
 
     async def GetCurso(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(CursoModel).where(CursoModel.id == request.id)
-            )
-            item = result.scalars().first()
+            # result = await session.execute(
+            #     select(CursoModel).where(CursoModel.id == request.id)
+            # )
+            # item = result.scalars().first()
+
+            item = await session.get(CursoModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Curso()
-            
+
             return dados_pb2.Curso(
                 id=item.id,
                 nome=item.nome,
@@ -1120,7 +827,7 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
             )
 
     async def CreateCurso(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = CursoModel(
                     nome=request.nome,
@@ -1155,7 +862,7 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
                 return dados_pb2.Curso(success=False)
 
     async def ListCurso(self, request: dados_pb2.ListCursosRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             query = select(CursoModel)
             if request.HasField('vertente'):
                 query = select(CursoModel).where(CursoModel.vertente == request.vertente)
@@ -1183,9 +890,9 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
                     )
                 )
             return lista_cursos
-    
+
     async def UpdateCurso(self, request: dados_pb2.Curso, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se a bolsa existe
                 resultado = await session.execute(
@@ -1197,7 +904,7 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Curso Indisponível")
                     return dados_pb2.Curso()
-                
+
                 #atualizando a bolsa
                 await session.execute(
                     update(CursoModel)
@@ -1238,9 +945,9 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
                 return dados_pb2.Curso()
-            
+
     async def DeleteCurso(self, request: dados_pb2.CursoRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se o estágio existe
                 resultado = await session.execute(
@@ -1269,18 +976,20 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
 class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
 
     async def GetEmpresa(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             #exemplo de consulta assíncrona
-            result = await session.execute(
-                select(EmpresaModel).where(EmpresaModel.id == request.id)
-            )
-            item = result.scalars().first()
+            # result = await session.execute(
+            #     select(EmpresaModel).where(EmpresaModel.id == request.id)
+            # )
+            # item = result.scalars().first()
+
+            item = await session.get(EmpresaModel, request.id)
 
             if item is None:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
                 context.set_details("Item Indisponível")
                 return dados_pb2.Empresa()
-            
+
             return dados_pb2.Empresa(
                 id=item.id,
                 nome=item.nome,
@@ -1294,7 +1003,7 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
             )
 
     async def CreateEmpresa(self, request, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 novo_item = EmpresaModel(
                     nome=request.nome,
@@ -1329,7 +1038,7 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
                 return dados_pb2.Empresa(success=False)
 
     async def ListEmpresa(self, request: dados_pb2.ListEmpresasRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             query = select(EmpresaModel)
             if request.HasField('vertente'):
                 query = select(EmpresaModel).where(EmpresaModel.vertente == request.vertente)
@@ -1353,9 +1062,9 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
                     )
                 )
             return lista_empresas
-    
+
     async def UpdateEmpresa(self, request: dados_pb2.Empresa, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se a empresa existe
                 resultado = await session.execute(
@@ -1367,7 +1076,7 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Empresa Indisponível")
                     return dados_pb2.Empresa()
-                
+
                 #atualizando a bolsa
                 await session.execute(
                     update(EmpresaModel)
@@ -1407,9 +1116,9 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
                 return dados_pb2.Empresa()
-            
+
     async def DeleteEmpresa(self, request: dados_pb2.EmpresaRequest, context):
-        async with AsyncSessionLocal() as session:
+        async with get_session() as session:
             try:
                 #verificando se a empresa existe
                 resultado = await session.execute(
@@ -1439,10 +1148,10 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
 
 #iniciando o servidor
 async def serve():
-    #inicializando o banco de dados
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
+    # #inicializando o banco de dados
+    # async with async_engine.begin() as conn:
+    #     await conn.run_sync(Base.metadata.create_all)
+
     #configurando o servidor o grpc
     servidor = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     dados_pb2_grpc.add_EnderecoServiceServicer_to_server(EnderecoService(), servidor)
@@ -1465,7 +1174,7 @@ if __name__ == '__main__':
 #     def CreateUser(self, request, context):
 #         conn = get_db_connection()
 #         cursor = conn.cursor()
-        
+
 #         # Insere o usuário no banco de dados
 #         cursor.execute(
 #             "INSERT INTO users (name, email) VALUES (%s, %s) RETURNING id, name, email",
@@ -1473,24 +1182,24 @@ if __name__ == '__main__':
 #         )
 #         user = cursor.fetchone()
 #         conn.commit()
-        
+
 #         # Fecha a conexão
 #         cursor.close()
 #         conn.close()
-        
+
 #         return dados_pb2.UserResponse(id=user[0], name=user[1], email=user[2])
 
 #     def GetUser(self, request, context):
 #         conn = get_db_connection()
 #         cursor = conn.cursor()
-        
+
 #         # Busca o usuário pelo id
 #         cursor.execute("SELECT id, name, email FROM users WHERE id = %s", (request.name,))
 #         user = cursor.fetchone()
-        
+
 #         cursor.close()
 #         conn.close()
-        
+
 #         if user:
 #             return dados_pb2.UserResponse(id=user[0], name=user[1], email=user[2])
 #         else:

@@ -5,7 +5,7 @@ import dados_pb2_grpc
 from client_endereco import createEnderecosImport, getAllEnderecosImport, getEnderecoIdImport, updateEnderecoImport, deleteEnderecoImport
 from client_plataforma import createPlataformaImport, getAllPlataformasImport, getPlataformaIdImport, updatePlataformaImport, deletePlataformaImport
 from client_professor import createProfessorImport, getAllProfessoresImport, getProfessorIdImport, updateProfessorImport, deleteProfessorImport, getProfessorElementImport
-from client_bolsa import createBolsaImport, getAllBolsasImport, getBolsaIdImport, updateBolsaImport, deleteBolsaImport, getBolsaElementImport
+from client_bolsa import createBolsaImport, getAllBolsasImport, getBolsaIdImport, updateBolsaImport, deleteBolsaImport
 
 
 options = [
@@ -21,8 +21,8 @@ async def run():
         # createEnderecosImport(stub, dados_pb2, request)
         # getAllEnderecosImport(stub, dados_pb2)
         # getEnderecoIdImport(stub, dados_pb2, {'id': 89})
-        # updateEnderecoImport(stub, dados_pb2, {"id": 35527, "rua": "Anahid de Andrade"})
-        # deleteEnderecoImport(stub, dados_pb2, {"id": 35519})
+        # updateEnderecoImport(stub, dados_pb2, {"id": 35527, "rua": "Anahid de Andrade teste 3"})
+        # deleteEnderecoImport(stub, dados_pb2, {"id": 36533})
 
         # stub = dados_pb2_grpc.PlataformaServiceStub(channel)
 
@@ -30,27 +30,25 @@ async def run():
         # createPlataformaImport(stub, dados_pb2, request)
         # getAllPlataformasImport(stub, dados_pb2)
         # getPlataformaIdImport(stub, dados_pb2, {'id': 89})
-        # updatePlataformaImport(stub, dados_pb2, {"id": 39701, "nome": "Youtube Premium"})
-        # deletePlataformaImport(stub, dados_pb2, {"id": 39701})
+        # updatePlataformaImport(stub, dados_pb2, {"id": 40589, "nome": "Youtube Premium"})
+        # deletePlataformaImport(stub, dados_pb2, {"id": 40700})
 
         # stub = dados_pb2_grpc.ProfessorServiceStub(channel)
 
         # request = {"nome": 'Eduardo Silva', "website": "eduardosilva.com", "email": "eduardolsilva@gmail.com"}
         # createProfessorImport(stub, dados_pb2, request)
         # getAllProfessoresImport(stub, dados_pb2)
-        # getProfessorElementImport(stub, dados_pb2, {"vertente": "Telecomunicações"})
         # getProfessorIdImport(stub, dados_pb2, {'id': 90})
-        # updateProfessorImport(stub, dados_pb2, {"id": 40311, "nome": "Eduardo Augusto"})
-        # deleteProfessorImport(stub, dados_pb2, {"id": 40311})
+        # updateProfessorImport(stub, dados_pb2, {"id": 41320, "nome": "Eduardo Augusto da Silva"})
+        # deleteProfessorImport(stub, dados_pb2, {"id": 41319})
 
         stub = dados_pb2_grpc.BolsaServiceStub(channel)
 
-        # request = {"nome": 'Monitoria de Química', "vertente": "Telecomunicações"}
-        # createBolsaImport(stub, dados_pb2, request)
-        # getBolsaElementImport(stub, dados_pb2, {"vertente": "Telecomunicações"})
-        # getAllBolsasImport(stub, dados_pb2)
+        request = {"nome": 'Monitoria de Tópicos de Telecomunicações', "vertente": "Telecomunicações"}
+        createBolsaImport(stub, dados_pb2, request)
+        getAllBolsasImport(stub, dados_pb2)
         getBolsaIdImport(stub, dados_pb2, {'id': 90})
-        # updateBolsaImport(stub, dados_pb2, {"id": 8820, "nome": "Monitoria de Física"})
+        updateBolsaImport(stub, dados_pb2, {"id": 8820, "nome": "Monitoria de Química"})
 
 
         # deleteBolsaImport(stub, dados_pb2, {"id": 8820})

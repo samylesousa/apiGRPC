@@ -210,15 +210,15 @@ message Data {
 
 message CreateBolsaRequest {
   string nome = 1;
-  string vertente = 2;
-  float salario = 3;
-  bool remunerado = 4;
-  int32 horas_semanais = 5;
-  int32 quantidade_vagas = 6;
-  string descricao = 7;
-  int32 professor_id = 8;
-  Data data_inicio = 9;
-  Data data_fim = 10;
+  optional string vertente = 2;
+  optional float salario = 3;
+  optional bool remunerado = 4;
+  optional int32 horas_semanais = 5;
+  optional int32 quantidade_vagas = 6;
+  optional string descricao = 7;
+  optional int32 professor_id = 8;
+  optional Data data_inicio = 9;
+  optional Data data_fim = 10;
 }
 
 message Bolsa {
