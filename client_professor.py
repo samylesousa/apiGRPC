@@ -63,16 +63,3 @@ def deleteProfessorImport(stub, dados_pb2, request):
         print(f"Professor deletado")
     except grpc.RpcError as e:
         print(f"Erro ao deletar o professor: {e.code()}: {e.details()}")
-
-
-
-
-    # #verifiando lista após deletar o endereço
-    # #esse método está pronto
-    # print("\nLista de endereços:")
-    # try:
-    #     enderecos_finais = stub.ListEnderecos(dados_pb2.ListEnderecoRequest())
-    #     for endereco in enderecos_finais.enderecos:
-    #         print(f"{endereco.id}: {endereco.rua} - {endereco.cidade}")
-    # except grpc.RpcError as e:
-    #     print(f"Erro ao listar endereços finais: {e.code(): {e.details()}}")
