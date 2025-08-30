@@ -1,4 +1,3 @@
-#o concurrent.futures é para a execução de chamadas assíncronas
 import grpc
 from concurrent import futures
 import dados_pb2
@@ -6,30 +5,7 @@ import dados_pb2_grpc
 from database.models import EmpresaModel, CursoModel, EstagioModel, BolsaModel, ProfessorModel, PlataformaModel, EnderecoModel
 from database.database_config import get_session
 import asyncio
-
-#imports para o banco de dados
-# import sqlalchemy as sa
-# from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-# from sqlalchemy.orm import sessionmaker
-# from sqlalchemy import Column, Integer, String, Text
-# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import select, update, delete
-# import asyncmy
-
-
-#configurando o banco de dados assíncrono
-#DATABASE_URL = "mysql+asyncmy://root:issoechatopracaralho@localhost:3306/dadosGerais"
-
-#criando uma engine assíncrona
-#async_engine = create_async_engine(DATABASE_URL, echo=True)
-
-#criando uma fabrica de sessoes assincronas
-# AsyncSessionLocal = sessionmaker(
-#     bind=async_engine,
-#     class_=AsyncSession,
-#     expire_on_commit=False,
-# )
-
 
 #classes para os elementos do .proto
 class EnderecoService(dados_pb2_grpc.EnderecoServiceServicer):
@@ -408,12 +384,6 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
 
     async def GetBolsa(self, request, context):
         async with get_session() as session:
-            #exemplo de consulta assíncrona
-            # result = await session.execute(
-            #     select(BolsaModel).where(BolsaModel.id == request.id)
-            # )
-            # item = result.scalars().first()
-
             item = await session.get(BolsaModel, request.id)
 
             if item is None:
@@ -476,17 +446,6 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
 
     async def ListBolsas(self, request: dados_pb2.ListBolsasRequest, context):
         async with get_session() as session:
-            # query = select(BolsaModel)
-            # if request.HasField('vertente'):
-            #     query = select(BolsaModel).where(BolsaModel.vertente == request.vertente)
-            # if request.HasField('remunerado'):
-            #     query = select(BolsaModel).where(BolsaModel.remunerado == request.remunerado)
-            # if request.HasField('horas_semanais'):
-            #     query = select(BolsaModel).where(BolsaModel.horas_semanais == request.horas_semanais)
-
-            # resultados = await session.execute(query)
-            # bolsas = resultados.scalars().all()
-
             resultado = await session.execute(select(BolsaModel))
             bolsas = resultado.scalars().all()
 
@@ -512,43 +471,12 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
     async def UpdateBolsa(self, request: dados_pb2.Bolsa, context):
         async with get_session() as session:
             try:
-                #verificando se a bolsa existe
-                # resultado = await session.execute(
-                #     select(BolsaModel).where(BolsaModel.id == request.id)
-                # )
-                # bolsa_existente = resultado.scalars().first()
                 bolsa_existente = await session.get(BolsaModel, request.id)
 
                 if bolsa_existente is None:
                     context.set_code(grpc.StatusCode.NOT_FOUND)
                     context.set_details("Bolsa Indisponível")
                     return dados_pb2.Bolsa()
-
-                #atualizando a bolsa
-                # await session.execute(
-                #     update(BolsaModel)
-                #     .where(BolsaModel.id == request.id)
-                #     .values(
-                #         nome=request.nome,
-                #         vertente=request.vertente,
-                #         salario=request.salario,
-                #         remunerado=request.remunerado,
-                #         horas_semanais=request.horas_semanais,
-                #         quantidade_vagas=request.quantidade_vagas,
-                #         descricao=request.descricao,
-                #         data_inicio=request.data_inicio,
-                #         data_fim=request.data_fim,
-                #         professor_id=request.professor_id,
-                #     )
-                # )
-                # await session.commit()
-
-                # resultado = await session.execute(
-                #     select(BolsaModel).where(BolsaModel.id == request.id)
-                # )
-                # bolsa_atualizada = resultado.scalars().first()
-                #verificando se o professor existe
-
 
                 #atualizando a bolsa
                 for key, value in request:
@@ -581,11 +509,6 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
     async def DeleteBolsa(self, request: dados_pb2.BolsaRequest, context):
         async with get_session() as session:
             try:
-                #verificando se o professor existe
-                # resultado = await session.execute(
-                #     select(BolsaModel).where(BolsaModel.id == request.id)
-                # )
-                # bolsa_existente = resultado.scalars().first()
                 bolsa_existente = await session.get(BolsaModel, request.id)
 
                 if bolsa_existente is None:
@@ -593,19 +516,6 @@ class BolsaService(dados_pb2_grpc.BolsaServiceServicer):
                     context.set_details("Bolsa Indisponível")
                     return dados_pb2.Empty()
 
-                #removendo a bolsa
-                # await session.execute(
-                #     delete(BolsaModel).where(BolsaModel.id == request.id)
-                # )
-                # await session.commit()
-
-
-                # if professor_existente is None:
-                #     context.set_code(grpc.StatusCode.NOT_FOUND)
-                #     context.set_details("Professor Indisponível")
-                #     return dados_pb2.Empty()
-
-                #removendo o professor
                 await session.delete(bolsa_existente)
                 await session.commit()
 
@@ -620,11 +530,6 @@ class EstagioService(dados_pb2_grpc.EstagioServiceServicer):
 
     async def GetEstagio(self, request, context):
         async with get_session() as session:
-            #exemplo de consulta assíncrona
-            # result = await session.execute(
-            #     select(EstagioModel).where(EstagioModel.id == request.id)
-            # )
-            # item = result.scalars().first()
 
             item = await session.get(EstagioModel, request.id)
 
@@ -801,11 +706,6 @@ class CursoService(dados_pb2_grpc.CursoServiceServicer):
 
     async def GetCurso(self, request, context):
         async with get_session() as session:
-            #exemplo de consulta assíncrona
-            # result = await session.execute(
-            #     select(CursoModel).where(CursoModel.id == request.id)
-            # )
-            # item = result.scalars().first()
 
             item = await session.get(CursoModel, request.id)
 
@@ -977,11 +877,6 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
 
     async def GetEmpresa(self, request, context):
         async with get_session() as session:
-            #exemplo de consulta assíncrona
-            # result = await session.execute(
-            #     select(EmpresaModel).where(EmpresaModel.id == request.id)
-            # )
-            # item = result.scalars().first()
 
             item = await session.get(EmpresaModel, request.id)
 
@@ -1148,9 +1043,6 @@ class EmpresaService(dados_pb2_grpc.EmpresaServiceServicer):
 
 #iniciando o servidor
 async def serve():
-    # #inicializando o banco de dados
-    # async with async_engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
 
     #configurando o servidor o grpc
     servidor = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -1170,51 +1062,3 @@ if __name__ == '__main__':
     asyncio.run(serve())
 
 
-# class UserService(dados_pb2_grpc.UserServiceServicer):
-#     def CreateUser(self, request, context):
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-
-#         # Insere o usuário no banco de dados
-#         cursor.execute(
-#             "INSERT INTO users (name, email) VALUES (%s, %s) RETURNING id, name, email",
-#             (request.name, request.email)
-#         )
-#         user = cursor.fetchone()
-#         conn.commit()
-
-#         # Fecha a conexão
-#         cursor.close()
-#         conn.close()
-
-#         return dados_pb2.UserResponse(id=user[0], name=user[1], email=user[2])
-
-#     def GetUser(self, request, context):
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
-
-#         # Busca o usuário pelo id
-#         cursor.execute("SELECT id, name, email FROM users WHERE id = %s", (request.name,))
-#         user = cursor.fetchone()
-
-#         cursor.close()
-#         conn.close()
-
-#         if user:
-#             return dados_pb2.UserResponse(id=user[0], name=user[1], email=user[2])
-#         else:
-#             context.set_details(f"User with id {request.name} not found.")
-#             context.set_code(grpc.StatusCode.NOT_FOUND)
-#             return dados_pb2.UserResponse()
-
-# # Configura o servidor gRPC
-# def serve():
-#     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-#     dados_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)
-#     server.add_insecure_port('[::]:50051')
-#     print("Server is running on port 50051...")
-#     server.start()
-#     server.wait_for_termination()
-
-# if __name__ == "__main__":
-#     serve()
