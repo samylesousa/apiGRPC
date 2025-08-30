@@ -1,9 +1,0 @@
-env
-database_config.py
-
-.vscode
-.env
-__pycache__
-.dados_pb2_grpc.py
-.dados_pb2.py
-.setting.json
